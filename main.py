@@ -1,6 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 posts: list[dict] = [
     {
@@ -21,19 +24,83 @@ posts: list[dict] = [
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"),name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
 
+@app.get("/health", name="health_check")
+def health_check():
+    """Health check endpoint"""
+    return {"Status": "OK"}
+
+
 @app.get("/", include_in_schema=False, name="home")
 @app.get("/posts", include_in_schema=False, name="posts")
-def home(request : Request):
-    """Hello World Endopint""" 
-    return templates.TemplateResponse(request,"home.html",{"posts" : posts, "title" : "Home"})
+def home(request: Request):
+    """Hello World Endopint"""
+    return templates.TemplateResponse(
+        request, "home.html", {"posts": posts, "title": "Home"}
+    )
 
 
 @app.get("/api/posts")
 def get_posts():
     """Endpoints which return all posts"""
     return posts
+
+
+@app.get("/posts/{post_id}", include_in_schema=False)
+def get_post(request: Request, post_id: int):
+    """Endpoints which return post by id"""
+    for post in posts:
+        if post.get("id") == post_id:
+            return templates.TemplateResponse(
+                request, "post.html", {
+                    "post": post, "title": post.get('title')}
+            )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Post not found")
+
+
+@app.exception_handler(StarletteHTTPException)
+def general_http_exception_handler(request: Request, exception: StarletteHTTPException):
+    message = (
+        exception.detail
+        if exception.detail
+        else "An error occurred. Please check your request and try again."
+    )
+
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=exception.status_code,
+            content={"detail": message},
+        )
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": exception.status_code,
+            "title": exception.status_code,
+            "message": message,
+        },
+        status_code=exception.status_code,
+    )
+
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request: Request, exception: RequestValidationError):
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            content={"detail": exception.errors()},
+        )
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "title": status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "message": "Invalid request. Please check your input and try again.",
+        },
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
