@@ -20,13 +20,6 @@ posts: list[dict] = [
     "author": "Jane Doe",
     "id": 2,
     "date_posted": "April 21, 2025"
-  },
-  {
-    "title": "My new Post",
-    "content": "Lorem Ipsum",
-    "author": "Hubert Kowalczyk",
-    "id": 3,
-    "date_posted": "April 23,2025"
   }
 ]
 
