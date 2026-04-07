@@ -4,22 +4,30 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from schemas import PostCreate,PostResponse
 
 posts: list[dict] = [
-    {
-        "id": 1,
-        "author": "Corey Schafer",
-        "title": "FastAPI is Awesome",
-        "content": "This framework is really easy to use and super fast.",
-        "date_posted": "April 20, 2025",
-    },
-    {
-        "id": 2,
-        "author": "Jane Doe",
-        "title": "Python is Great for Web Development",
-        "content": "Python is a great language for web development, and FastAPI makes it even better.",
-        "date_posted": "April 21, 2025",
-    },
+  {
+    "title": "FastAPI is Awesome",
+    "content": "This framework is really easy to use and super fast.",
+    "author": "Corey Schafer",
+    "id": 1,
+    "date_posted": "April 20, 2025"
+  },
+  {
+    "title": "Python is Great for Web Development",
+    "content": "Python is a great language for web development, and FastAPI makes it even better.",
+    "author": "Jane Doe",
+    "id": 2,
+    "date_posted": "April 21, 2025"
+  },
+  {
+    "title": "My new Post",
+    "content": "Lorem Ipsum",
+    "author": "Hubert Kowalczyk",
+    "id": 3,
+    "date_posted": "April 23,2025"
+  }
 ]
 
 
@@ -43,14 +51,27 @@ def home(request: Request):
         request, "home.html", {"posts": posts, "title": "Home"}
     )
 
+@app.post("/api/posts",response_model=PostResponse,status_code=status.HTTP_201_CREATED)
+def create_post(post: PostCreate):
+    new_id = max(p["id"] for p in posts) + 1 if posts else 1
+    new_post = {
+        "id": new_id,
+        "author": post.author,
+        "title": post.title,
+        "content": post.content,
+        "date_posted": "April 23,2025",
+    }
+    posts.append(new_post)
+    return new_post
 
-@app.get("/api/posts")
+
+@app.get("/api/posts", response_model=list[PostResponse])
 def get_posts():
     """Endpoints which return all posts"""
     return posts
 
 
-@app.get("/posts/{post_id}", include_in_schema=False)
+@app.get("/posts/{post_id}", include_in_schema=False, response_model=PostResponse)
 def get_post(request: Request, post_id: int):
     """Endpoints which return post by id"""
     for post in posts:
