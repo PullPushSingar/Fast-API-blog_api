@@ -22,6 +22,18 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 
 templates = Jinja2Templates(directory="templates")
 
+@app.get("/api/health", include_in_schema=False)
+def get_health():
+    return {"Status" : "OK"}
+
+
+@app.get("/health", include_in_schema=False, name="health")
+def health_page(request : Request):
+    return templates.TemplateResponse(
+    "health.html",
+    {"request": request, "status" : "OK" }
+)
+
 
 @app.get("/", include_in_schema=False, name="home")
 @app.get("/posts", include_in_schema=False, name="posts")

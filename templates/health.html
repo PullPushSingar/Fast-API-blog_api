@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% if status == "OK" %}
+        <p>✅ Service is Healthy</p>
+    {% else %}
+        <p>❌ Down</p>
+    {% endif %}
+{% endblock content %}
