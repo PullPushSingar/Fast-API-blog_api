@@ -20,14 +20,16 @@ class UserPublic(BaseModel):
     image_file: str | None
     image_path: str
 
+
 class UserPrivate(UserPublic):
     email: EmailStr
 
 
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=1, max_length=50)
-    email: EmailStr | None = Field(efault=None, max_length=120)
+    email: EmailStr | None = Field(default=None, max_length=120)
     image_file: str | None = Field(default=None, min_length=1, max_length=200)
+
 
 class Token(BaseModel):
     access_token: str
@@ -42,8 +44,9 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     pass
 
-class PostUpdate(PostBase):
-    title: str | None = Field(default=None, min_length=1,max_length=100)
+
+class PostUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=100)
     content: str | None = Field(default=None, min_length=1)
 
 
